@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brew & Co — Staff Attendance</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #F5EFE4;
+  --warm-white: #FAF7F2;
+  --espresso: #2C1810;
+  --dark-roast: #1A0F0A;
+  --caramel: #C8854A;
+  --latte: #D4A574;
+  --mocha: #6B3F2A;
+  --steam: #E8DDD0;
+  --foam: #F0EAE0;
+  --accent-green: #4A7C59;
+  --accent-red: #B85450;
+  --accent-amber: #D4A017;
+  --shadow: rgba(44,24,16,0.12);
+  --shadow-deep: rgba(44,24,16,0.22);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--espresso);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(200,133,74,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(107,63,42,0.06) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C8854A' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+.app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── TOP NAV ── */
+nav {
+  background: var(--espresso);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 64px;
+  box-shadow: 0 4px 24px var(--shadow-deep);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; color: var(--latte); letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon { font-size: 20px; }
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  background: none; border: none; cursor: pointer;
+  color: rgba(245,239,228,0.55); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500; letter-spacing: 0.3px;
+  padding: 8px 16px; border-radius: 8px; transition: all 0.2s;
+}
+.nav-tab:hover { color: var(--latte); background: rgba(200,133,74,0.1); }
+.nav-tab.active { color: var(--cream); background: rgba(200,133,74,0.18); }
+.nav-user {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--steam); font-size: 13px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--caramel), var(--mocha));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--cream); font-size: 13px; font-weight: 600;
+  border: 2px solid rgba(200,133,74,0.4);
+}
+
+/* ── MAIN CONTENT ── */
+main { flex: 1; padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+/* ── PAGE HEADER ── */
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--espresso); }
+.page-subtitle { font-size: 13px; color: var(--mocha); margin-top: 2px; }
+.date-badge {
+  background: var(--espresso); color: var(--latte);
+  padding: 8px 16px; border-radius: 24px;
+  font-family: 'DM Mono', monospace; font-size: 13px;
+}
+
+/* ── STAT CARDS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--warm-white);
+  border: 1px solid var(--steam);
+  border-radius: 16px; padding: 20px 22px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 2px 12px var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow); }
+.stat-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--caramel), var(--latte));
+}
+.stat-card.green::after { background: linear-gradient(90deg, var(--accent-green), #6AAF85); }
+.stat-card.red::after { background: linear-gradient(90deg, var(--accent-red), #D47470); }
+.stat-card.amber::after { background: linear-gradient(90deg, var(--accent-amber), #E8C44A); }
+.stat-label { font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--mocha); margin-bottom: 8px; }
+.stat-value { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--espresso); line-height: 1; }
+.stat-sub { font-size: 12px; color: var(--mocha); margin-top: 4px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--warm-white);
+  border: 1px solid var(--steam);
+  border-radius: 16px;
+  box-shadow: 0 2px 16px var(--shadow);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--steam);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--foam);
+}
+.card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; }
+.card-body { padding: 24px; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--mocha);
+  padding: 10px 14px; text-align: left;
+  background: var(--foam); border-bottom: 1px solid var(--steam);
+}
+tbody td { padding: 12px 14px; font-size: 14px; border-bottom: 1px solid rgba(232,221,208,0.5); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.15s; }
+tbody tr:hover { background: var(--foam); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+}
+.badge-present { background: rgba(74,124,89,0.12); color: var(--accent-green); }
+.badge-absent { background: rgba(184,84,80,0.12); color: var(--accent-red); }
+.badge-weekoff { background: rgba(212,160,23,0.12); color: var(--accent-amber); }
+.badge-late { background: rgba(200,133,74,0.15); color: var(--caramel); }
+.badge-break { background: rgba(107,63,42,0.1); color: var(--mocha); }
+
+/* ── TIME DISPLAY ── */
+.time-val { font-family: 'DM Mono', monospace; font-size: 13px; }
+.working-hrs { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--accent-green); }
+
+/* ── BUTTONS ── */
+.btn {
+  border: none; cursor: pointer; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary {
+  background: var(--espresso); color: var(--cream);
+  padding: 10px 20px; font-size: 14px;
+}
+.btn-primary:hover { background: var(--mocha); box-shadow: 0 4px 12px var(--shadow); }
+.btn-sm {
+  padding: 6px 14px; font-size: 12px; border-radius: 8px;
+}
+.btn-outline {
+  background: none; border: 1px solid var(--steam);
+  color: var(--espresso); padding: 8px 16px; font-size: 13px;
+}
+.btn-outline:hover { border-color: var(--caramel); color: var(--caramel); }
+.btn-caramel { background: var(--caramel); color: white; }
+.btn-caramel:hover { background: #B5733A; }
+.btn-green { background: var(--accent-green); color: white; }
+.btn-green:hover { background: #3D6B4A; }
+.btn-red { background: var(--accent-red); color: white; }
+.btn-red:hover { background: #9E4440; }
+
+/* ── FORM ELEMENTS ── */
+.form-group { margin-bottom: 18px; }
+label { display: block; font-size: 12px; font-weight: 500; letter-spacing: 0.4px; text-transform: uppercase; color: var(--mocha); margin-bottom: 6px; }
+input, select {
+  width: 100%; background: var(--foam);
+  border: 1px solid var(--steam); border-radius: 10px;
+  padding: 10px 14px; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--espresso); transition: border 0.2s;
+  outline: none;
+}
+input:focus, select:focus { border-color: var(--caramel); box-shadow: 0 0 0 3px rgba(200,133,74,0.1); }
+
+/* ── GRID LAYOUTS ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+/* ── CLOCK CARD ── */
+.clock-section {
+  background: var(--espresso);
+  border-radius: 20px; padding: 28px 32px;
+  color: var(--cream); margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 8px 32px rgba(44,24,16,0.25);
+  position: relative; overflow: hidden;
+}
+.clock-section::before {
+  content: '☕'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+  font-size: 80px; opacity: 0.05;
+}
+.live-time { font-family: 'DM Mono', monospace; font-size: 48px; letter-spacing: 2px; color: var(--latte); line-height: 1; }
+.live-date { font-size: 14px; color: var(--steam); margin-top: 6px; }
+.clock-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+
+/* ── ANNOUNCEMENT BANNER ── */
+.announcement {
+  background: linear-gradient(135deg, var(--caramel), var(--mocha));
+  color: var(--cream); border-radius: 14px; padding: 16px 20px;
+  margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 4px 16px rgba(200,133,74,0.3);
+}
+.announcement-icon { font-size: 20px; flex-shrink: 0; }
+.announcement-text { font-size: 14px; line-height: 1.5; }
+.announcement-text strong { display: block; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.8; margin-bottom: 2px; }
+
+/* ── PROGRESS BAR ── */
+.progress-bar { background: var(--steam); border-radius: 99px; height: 6px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--caramel), var(--latte)); transition: width 0.5s ease; }
+
+/* ── ATTENDANCE LOG ── */
+.log-entry {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 0; border-bottom: 1px solid var(--steam);
+}
+.log-entry:last-child { border-bottom: none; }
+.log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.log-dot-green { background: var(--accent-green); }
+.log-dot-red { background: var(--accent-red); }
+.log-dot-amber { background: var(--accent-amber); }
+.log-info { flex: 1; }
+.log-name { font-size: 14px; font-weight: 500; }
+.log-detail { font-size: 12px; color: var(--mocha); }
+.log-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--caramel); }
+
+/* ── PERFORMANCE CHART ── */
+.perf-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.perf-name { width: 110px; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+.perf-bar-wrap { flex: 1; }
+.perf-pct { width: 40px; text-align: right; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--caramel); flex-shrink: 0; }
+
+/* ── FILTER ROW ── */
+.filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+.filter-row select { width: auto; padding: 8px 14px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(26,15,10,0.6); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+.modal {
+  background: var(--warm-white); border-radius: 20px;
+  width: 90%; max-width: 520px; max-height: 90vh;
+  overflow-y: auto; box-shadow: 0 20px 60px rgba(26,15,10,0.3);
+}
+.modal-header {
+  padding: 22px 28px; border-bottom: 1px solid var(--steam);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--foam);
+}
+.modal-title { font-family: 'Playfair Display', serif; font-size: 20px; }
+.modal-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--mocha); padding: 4px; border-radius: 6px; }
+.modal-close:hover { background: var(--steam); }
+.modal-body { padding: 28px; }
+
+/* ── SELECT STAFF CARDS ── */
+.staff-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.staff-sel-card {
+  background: var(--foam); border: 2px solid var(--steam);
+  border-radius: 12px; padding: 12px; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.staff-sel-card:hover { border-color: var(--latte); }
+.staff-sel-card.selected { border-color: var(--caramel); background: rgba(200,133,74,0.08); }
+.staff-sel-name { font-size: 13px; font-weight: 500; }
+.staff-sel-role { font-size: 11px; color: var(--mocha); }
+
+/* ── MONTHLY CALENDAR HEAT ── */
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
+  margin-top: 12px;
+}
+.cal-day-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--mocha); text-align: center; padding: 4px; }
+.cal-day {
+  aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-family: 'DM Mono', monospace;
+  cursor: default; transition: transform 0.1s;
+}
+.cal-day:hover { transform: scale(1.1); }
+.cal-present { background: rgba(74,124,89,0.2); color: var(--accent-green); }
+.cal-absent { background: rgba(184,84,80,0.15); color: var(--accent-red); }
+.cal-weekoff { background: rgba(212,160,23,0.12); color: var(--accent-amber); }
+.cal-empty { background: transparent; }
+.cal-late { background: rgba(200,133,74,0.2); color: var(--caramel); }
+.cal-today { outline: 2px solid var(--caramel); outline-offset: 1px; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--steam); border-radius: 99px; }
+
+/* ── RESPONSIVE ── */
+@media(max-width: 768px) {
+  nav { padding: 0 16px; }
+  main { padding: 16px; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .clock-section { flex-direction: column; gap: 20px; }
+  .live-time { font-size: 36px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <span class="logo-icon">☕</span> Brew & Co
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('admin')">Admin</button>
+    <button class="nav-tab" onclick="showPanel('checkin')">Check-In</button>
+    <button class="nav-tab" onclick="showPanel('reports')">Reports</button>
+    <button class="nav-tab" onclick="showPanel('viewer')">Viewer</button>
+    <button class="nav-tab" onclick="showPanel('staff')">Staff</button>
+  </div>
+  <div class="nav-user">
+    <div class="user-avatar">AM</div>
+    <span>Admin</span>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════ ADMIN PANEL ═══════════════════ -->
+<div class="panel active" id="panel-admin">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Good Morning, Admin ☕</div>
+      <div class="page-subtitle">Here's your daily brew report</div>
+    </div>
+    <div class="date-badge" id="header-date">—</div>
+  </div>
+
+  <!-- Announcement -->
+  <div class="announcement">
+    <div class="announcement-icon">🎉</div>
+    <div class="announcement-text">
+      <strong>Announcement</strong>
+      Team meeting today at 3:00 PM — All staff in the main hall. Happy Birthday Priya! 🎂
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-label">Present Today</div>
+      <div class="stat-value" id="stat-present">—</div>
+      <div class="stat-sub">of <span id="stat-total">—</span> staff</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Absent</div>
+      <div class="stat-value" id="stat-absent">—</div>
+      <div class="stat-sub">notified</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Week Off</div>
+      <div class="stat-value" id="stat-weekoff">—</div>
+      <div class="stat-sub">scheduled</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Late Today</div>
+      <div class="stat-value" id="stat-late">—</div>
+      <div class="stat-sub">arrivals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg. Hours</div>
+      <div class="stat-value" id="stat-avghrs">—</div>
+      <div class="stat-sub">this week</div>
+    </div>
+  </div>
+
+  <!-- Today's Live Log -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Today's Attendance</div>
+        <button class="btn btn-sm btn-primary" onclick="openModal('modal-checkin')">+ Log</button>
+      </div>
+      <div class="card-body" id="today-log">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Staff on Break</div>
+        <span class="badge badge-break">Live</span>
+      </div>
+      <div class="card-body" id="break-log">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Today Table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Attendance Register</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm btn-outline" onclick="exportCSV()">⬇ Export</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap">
+        <table id="attendance-table">
+          <thead>
+            <tr>
+              <th>Staff ID</th><th>Name</th><th>Role</th>
+              <th>Check-In</th><th>Break</th><th>Check-Out</th>
+              <th>Status</th><th>Working Hrs</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CHECK-IN PANEL ═══════════════════ -->
+<div class="panel" id="panel-checkin">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Time Terminal</div>
+      <div class="page-subtitle">Log check-in, breaks and check-out</div>
+    </div>
+    <div class="date-badge" id="checkin-date-badge">—</div>
+  </div>
+
+  <!-- Live Clock -->
+  <div class="clock-section">
+    <div>
+      <div class="live-time" id="live-clock">00:00:00</div>
+      <div class="live-date" id="live-date-text">Loading...</div>
+    </div>
+    <div class="clock-actions">
+      <select id="ci-staff-sel" style="background:rgba(255,255,255,0.1);border:1px solid rgba(245,239,228,0.2);color:var(--cream);border-radius:10px;padding:8px 14px;font-size:14px;outline:none;">
+        <option value="">— Select Staff —</option>
+      </select>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="btn btn-sm btn-green" onclick="logAction('checkin')">✓ Check-In</button>
+        <button class="btn btn-sm btn-caramel" onclick="logAction('break-start')">⏸ Break</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--cream);border-color:rgba(245,239,228,0.3);" onclick="logAction('break-end')">▶ Resume</button>
+        <button class="btn btn-sm btn-red" onclick="logAction('checkout')">✗ Check-Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Cards per Staff -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Current Status</div>
+      <span style="font-size:12px;color:var(--mocha);">Auto-refreshes</span>
+    </div>
+    <div class="card-body">
+      <div id="status-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ REPORTS PANEL ═══════════════════ -->
+<div class="panel" id="panel-reports">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Monthly Reports</div>
+      <div class="page-subtitle">Analytics & performance overview</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-row">
+    <select id="rpt-month" onchange="renderReports()">
+      <option value="0">January</option><option value="1">February</option>
+      <option value="2">March</option><option value="3">April</option>
+      <option value="4">May</option><option value="5">June</option>
+      <option value="6">July</option><option value="7">August</option>
+      <option value="8">September</option><option value="9">October</option>
+      <option value="10">November</option><option value="11">December</option>
+    </select>
+    <select id="rpt-year" onchange="renderReports()">
+      <option>2025</option><option selected>2026</option>
+    </select>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ Export Report</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="rpt-stats"></div>
+
+  <div class="grid-2">
+    <!-- Performance Chart -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Attendance %</div></div>
+      <div class="card-body" id="perf-chart"></div>
+    </div>
+
+    <!-- Summary Table -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Monthly Summary</div></div>
+      <div class="card-body">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Present</th><th>Absent</th><th>Late</th><th>Avg Hrs</th></tr></thead>
+            <tbody id="rpt-summary-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ VIEWER / CLIENT PANEL ═══════════════════ -->
+<div class="panel" id="panel-viewer">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Staff Overview</div>
+      <div class="page-subtitle">Client dashboard — view only</div>
+    </div>
+  </div>
+
+  <!-- Announcement -->
+  <div class="announcement" id="viewer-announcement">
+    <div class="announcement-icon">📢</div>
+    <div class="announcement-text">
+      <strong>Notice</strong>
+      The café will observe a special holiday on March 15. Adjusted shifts apply.
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-row">
+    <select id="view-month" onchange="renderViewer()">
+      <option value="0">January</option><option value="1" selected>February</option>
+      <option value="2">March</option><option value="3">April</option>
+      <option value="4">May</option><option value="5">June</option>
+      <option value="6">July</option><option value="7">August</option>
+      <option value="8">September</option><option value="9">October</option>
+      <option value="10">November</option><option value="11">December</option>
+    </select>
+    <select id="view-staff" onchange="renderViewer()">
+      <option value="all">All Staff</option>
+    </select>
+  </div>
+
+  <!-- Staff Cards -->
+  <div id="viewer-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+</div>
+
+<!-- ═══════════════════ STAFF MANAGEMENT ═══════════════════ -->
+<div class="panel" id="panel-staff">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Staff Directory</div>
+      <div class="page-subtitle">Manage your team</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-add-staff')">+ Add Staff</button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Role</th><th>Shift Start</th><th>Shift End</th><th>Week Off</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="staff-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ═══════════ MODAL: CHECK-IN LOG ═══════════ -->
+<div class="modal-overlay" id="modal-checkin">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Log Attendance</div>
+      <button class="modal-close" onclick="closeModal('modal-checkin')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Select Staff</label>
+        <select id="m-ci-staff">
+          <option value="">— Choose —</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="m-ci-date">
+        </div>
+        <div class="form-group">
+          <label>Action</label>
+          <select id="m-ci-action">
+            <option>Check-In</option>
+            <option>Break Start</option>
+            <option>Break End</option>
+            <option>Check-Out</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Time (leave blank for now)</label>
+        <input type="time" id="m-ci-time">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="submitLog()">Submit Log</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: ADD STAFF ═══════════ -->
+<div class="modal-overlay" id="modal-add-staff">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Staff</div>
+      <button class="modal-close" onclick="closeModal('modal-add-staff')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Staff Name</label>
+          <input type="text" id="s-name" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="s-role">
+            <option>Barista</option>
+            <option>Cashier</option>
+            <option>Supervisor</option>
+            <option>Chef</option>
+            <option>Cleaner</option>
+            <option>Manager</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Shift Start</label>
+          <input type="time" id="s-shift-start" value="09:00">
+        </div>
+        <div class="form-group">
+          <label>Shift End</label>
+          <input type="time" id="s-shift-end" value="18:00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Week Off Day</label>
+        <select id="s-weekoff">
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option>
+          <option selected>Saturday</option><option>Sunday</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="addStaff()">Add Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: EDIT RECORD ═══════════ -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Record</div>
+      <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+    </div>
+    <div class="modal-body" id="edit-modal-body">
+      <!-- populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  DATA LAYER
+// ══════════════════════════════════════════════════
+
+let staff = [
+  { id:'BC001', name:'Priya Sharma', role:'Supervisor', shiftStart:'08:00', shiftEnd:'17:00', weekOff:'Sunday' },
+  { id:'BC002', name:'Arjun Mehta', role:'Barista', shiftStart:'09:00', shiftEnd:'18:00', weekOff:'Monday' },
+  { id:'BC003', name:'Sneha Patel', role:'Cashier', shiftStart:'10:00', shiftEnd:'19:00', weekOff:'Tuesday' },
+  { id:'BC004', name:'Rahul Iyer', role:'Chef', shiftStart:'07:00', shiftEnd:'15:00', weekOff:'Wednesday' },
+  { id:'BC005', name:'Kavya Nair', role:'Barista', shiftStart:'12:00', shiftEnd:'21:00', weekOff:'Thursday' },
+  { id:'BC006', name:'Rohan Gupta', role:'Manager', shiftStart:'09:00', shiftEnd:'18:00', weekOff:'Saturday' },
+];
+
+// Today's attendance seed data
+const today = new Date();
+const todayStr = fmt(today);
+
+let attendance = [
+  { date: todayStr, staffId:'BC001', checkIn:'08:02', breakStart:'12:05', breakEnd:'12:45', checkOut:'', status:'Present', notes:'' },
+  { date: todayStr, staffId:'BC002', checkIn:'09:18', breakStart:'13:00', breakEnd:'13:30', checkOut:'', status:'Late', notes:'' },
+  { date: todayStr, staffId:'BC003', checkIn:'10:01', breakStart:'', breakEnd:'', checkOut:'', status:'Present', notes:'' },
+  { date: todayStr, staffId:'BC004', checkIn:'07:05', breakStart:'11:00', breakEnd:'11:20', checkOut:'15:05', status:'Present', notes:'' },
+  { date: todayStr, staffId:'BC005', checkIn:'', breakStart:'', breakEnd:'', checkOut:'', status:'Week Off', notes:'' },
+  { date: todayStr, staffId:'BC006', checkIn:'09:00', breakStart:'', breakEnd:'', checkOut:'', status:'Present', notes:'' },
+];
+
+// Generate historical attendance for reports
+function seedHistory() {
+  const days = [-28,-21,-14,-7,-3,-2,-1];
+  days.forEach(d => {
+    const dt = new Date(); dt.setDate(dt.getDate()+d);
+    const ds = fmt(dt);
+    staff.forEach(s => {
+      if (!attendance.find(a=>a.date===ds && a.staffId===s.id)) {
+        const roll = Math.random();
+        let status='Present', ci='', co='';
+        if (roll<0.08) status='Absent';
+        else if (roll<0.15) status='Week Off';
+        else {
+          const base = timeToMin(s.shiftStart);
+          const late = Math.random()<0.2 ? Math.floor(Math.random()*45) : Math.floor(Math.random()*10);
+          ci = minToTime(base+late);
+          co = minToTime(timeToMin(s.shiftEnd)-Math.floor(Math.random()*15));
+          if (late>15) status='Late';
+        }
+        attendance.push({ date:ds, staffId:s.id, checkIn:ci, breakStart:'', breakEnd:'', checkOut:co, status, notes:'' });
+      }
+    });
+  });
+}
+seedHistory();
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+function fmt(d) { return d.toISOString().split('T')[0]; }
+function timeToMin(t) { if(!t) return 0; const [h,m]=t.split(':'); return +h*60+ +m; }
+function minToTime(m) { const h=Math.floor(m/60)%24, mm=m%60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
+function calcWorkingHrs(rec) {
+  if(!rec.checkIn || !rec.checkOut) return '—';
+  let total = timeToMin(rec.checkOut) - timeToMin(rec.checkIn);
+  if(rec.breakStart && rec.breakEnd) total -= timeToMin(rec.breakEnd) - timeToMin(rec.breakStart);
+  if(total<=0) return '—';
+  const h=Math.floor(total/60), m=total%60;
+  return `${h}h ${String(m).padStart(2,'0')}m`;
+}
+function getStaff(id) { return staff.find(s=>s.id===id)||{}; }
+function getTodayRec(id) { return attendance.find(a=>a.date===todayStr && a.staffId===id); }
+function nowTime() { const n=new Date(); return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ══════════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════════
+function updateClock() {
+  const n=new Date();
+  const timeStr = n.toLocaleTimeString('en-IN',{hour12:false});
+  const dateStr = n.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('live-clock').textContent = timeStr;
+  document.getElementById('live-date-text').textContent = dateStr;
+  document.getElementById('header-date').textContent = n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const el2 = document.getElementById('checkin-date-badge');
+  if(el2) el2.textContent = n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ══════════════════════════════════════════════════
+//  PANEL SWITCHING
+// ══════════════════════════════════════════════════
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(name==='admin') renderAdmin();
+  if(name==='checkin') renderCheckin();
+  if(name==='reports') { setMonthFilter(); renderReports(); }
+  if(name==='viewer') { setMonthFilter2(); renderViewer(); }
+  if(name==='staff') renderStaff();
+}
+
+// ══════════════════════════════════════════════════
+//  ADMIN PANEL
+// ══════════════════════════════════════════════════
+function renderAdmin() {
+  const todayRecs = attendance.filter(a=>a.date===todayStr);
+  let present=0,absent=0,weekoff=0,late=0,totalHrs=0,hrsCount=0;
+  staff.forEach(s => {
+    const rec = todayRecs.find(r=>r.staffId===s.id);
+    if(!rec||rec.status==='Absent') absent++;
+    else if(rec.status==='Week Off') weekoff++;
+    else { present++; if(rec.status==='Late') late++; }
+    const wh = rec ? workingHrsMin(rec) : 0;
+    if(wh>0) { totalHrs+=wh; hrsCount++; }
+  });
+  document.getElementById('stat-present').textContent=present;
+  document.getElementById('stat-absent').textContent=absent;
+  document.getElementById('stat-weekoff').textContent=weekoff;
+  document.getElementById('stat-late').textContent=late;
+  document.getElementById('stat-total').textContent=staff.length;
+  const avg = hrsCount? Math.floor(totalHrs/hrsCount/60)+'h '+(Math.floor(totalHrs/hrsCount)%60)+'m':'—';
+  document.getElementById('stat-avghrs').textContent=avg;
+
+  // Today log
+  const logEl = document.getElementById('today-log');
+  logEl.innerHTML = todayRecs.filter(r=>r.checkIn).map(r=>{
+    const s=getStaff(r.staffId);
+    const dot = r.status==='Late'?'log-dot-amber':'log-dot-green';
+    return `<div class="log-entry"><div class="log-dot ${dot}"></div>
+      <div class="log-info"><div class="log-name">${s.name}</div><div class="log-detail">${s.role} · ${r.status}</div></div>
+      <div class="log-time">${r.checkIn}</div></div>`;
+  }).join('') || '<div style="color:var(--mocha);font-size:13px;">No check-ins yet today.</div>';
+
+  // Break log
+  const breakEl = document.getElementById('break-log');
+  const onBreak = todayRecs.filter(r=>r.breakStart && !r.breakEnd && !r.checkOut);
+  breakEl.innerHTML = onBreak.length ? onBreak.map(r=>{
+    const s=getStaff(r.staffId);
+    return `<div class="log-entry"><div class="log-dot log-dot-amber"></div>
+      <div class="log-info"><div class="log-name">${s.name}</div><div class="log-detail">Break since ${r.breakStart}</div></div>
+      <div class="log-time">⏸</div></div>`;
+  }).join('') : '<div style="color:var(--mocha);font-size:13px;">No one on break.</div>';
+
+  // Full table
+  const tbody = document.getElementById('attendance-tbody');
+  tbody.innerHTML = staff.map(s=>{
+    const r = todayRecs.find(x=>x.staffId===s.id)||{};
+    const wh = calcWorkingHrs(r);
+    return `<tr>
+      <td><span class="time-val">${s.id}</span></td>
+      <td><strong>${s.name}</strong></td>
+      <td style="color:var(--mocha)">${s.role}</td>
+      <td class="time-val">${r.checkIn||'—'}</td>
+      <td class="time-val">${r.breakStart?(r.breakEnd?r.breakStart+' – '+r.breakEnd:r.breakStart+' (on break)'):'-'}</td>
+      <td class="time-val">${r.checkOut||'—'}</td>
+      <td>${statusBadge(r.status||'Absent')}</td>
+      <td><span class="working-hrs">${wh}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="editRecord('${s.id}')">Edit</button></td>
+    </tr>`;
+  }).join('');
+
+  // Populate modal selects
+  populateStaffSelects();
+}
+
+function workingHrsMin(rec) {
+  if(!rec.checkIn||!rec.checkOut) return 0;
+  let t=timeToMin(rec.checkOut)-timeToMin(rec.checkIn);
+  if(rec.breakStart&&rec.breakEnd) t-=timeToMin(rec.breakEnd)-timeToMin(rec.breakStart);
+  return Math.max(0,t);
+}
+
+function statusBadge(s) {
+  const map={'Present':'badge-present','Absent':'badge-absent','Week Off':'badge-weekoff','Late':'badge-late'};
+  const dot={'Present':'🟢','Absent':'🔴','Week Off':'🟡','Late':'🟠'};
+  return `<span class="badge ${map[s]||'badge-break'}">${dot[s]||'⚪'} ${s||'—'}</span>`;
+}
+
+function populateStaffSelects() {
+  const opts = staff.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  ['m-ci-staff','ci-staff-sel'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) { const cur=el.value; el.innerHTML='<option value="">— Select —</option>'+opts; if(cur) el.value=cur; }
+  });
+  const vs = document.getElementById('view-staff');
+  if(vs) { vs.innerHTML='<option value="all">All Staff</option>'+staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join(''); }
+}
+
+// ══════════════════════════════════════════════════
+//  CHECK-IN PANEL
+// ══════════════════════════════════════════════════
+function renderCheckin() {
+  populateStaffSelects();
+  const el = document.getElementById('status-cards');
+  el.innerHTML = staff.map(s=>{
+    const r=getTodayRec(s.id)||{};
+    let statusText='Not Checked In', statusColor='var(--steam)', textColor='var(--mocha)';
+    if(r.checkIn && !r.checkOut) { statusText='Working'; statusColor='rgba(74,124,89,0.15)'; textColor='var(--accent-green)'; }
+    if(r.breakStart && !r.breakEnd) { statusText='On Break'; statusColor='rgba(212,160,23,0.12)'; textColor='var(--accent-amber)'; }
+    if(r.checkOut) { statusText='Checked Out'; statusColor='rgba(107,63,42,0.08)'; textColor='var(--mocha)'; }
+    if(r.status==='Week Off') { statusText='Week Off'; statusColor='rgba(212,160,23,0.12)'; textColor='var(--accent-amber)'; }
+    return `<div style="background:${statusColor};border:1px solid var(--steam);border-radius:12px;padding:14px;">
+      <div style="font-size:13px;font-weight:600;">${s.name}</div>
+      <div style="font-size:11px;color:var(--mocha);margin-bottom:8px;">${s.role}</div>
+      <div style="font-size:12px;font-weight:600;color:${textColor};">${statusText}</div>
+      ${r.checkIn?`<div class="time-val" style="font-size:11px;color:var(--mocha);margin-top:4px;">In: ${r.checkIn}${r.checkOut?' | Out: '+r.checkOut:''}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function logAction(action) {
+  const sel = document.getElementById('ci-staff-sel');
+  const staffId = sel.value;
+  if(!staffId) { alert('Please select a staff member first.'); return; }
+  const now = nowTime();
+  let rec = attendance.find(a=>a.date===todayStr && a.staffId===staffId);
+  if(!rec) {
+    rec = { date:todayStr, staffId, checkIn:'', breakStart:'', breakEnd:'', checkOut:'', status:'', notes:'' };
+    attendance.push(rec);
+  }
+  const s = getStaff(staffId);
+  if(action==='checkin') {
+    if(rec.checkIn) { alert('Already checked in at '+rec.checkIn); return; }
+    rec.checkIn=now;
+    const shiftMin=timeToMin(s.shiftStart), actualMin=timeToMin(now);
+    rec.status = actualMin > shiftMin+15 ? 'Late' : 'Present';
+  } else if(action==='break-start') {
+    if(!rec.checkIn) { alert('Staff hasn\'t checked in yet.'); return; }
+    rec.breakStart=now; rec.breakEnd='';
+  } else if(action==='break-end') {
+    if(!rec.breakStart) { alert('No active break found.'); return; }
+    rec.breakEnd=now;
+  } else if(action==='checkout') {
+    if(!rec.checkIn) { alert('Staff hasn\'t checked in yet.'); return; }
+    rec.checkOut=now;
+  }
+  renderCheckin(); renderAdmin();
+}
+
+// ══════════════════════════════════════════════════
+//  LOG MODAL SUBMIT
+// ══════════════════════════════════════════════════
+function submitLog() {
+  const staffId = document.getElementById('m-ci-staff').value;
+  const date = document.getElementById('m-ci-date').value;
+  const action = document.getElementById('m-ci-action').value;
+  const time = document.getElementById('m-ci-time').value || nowTime();
+  if(!staffId||!date) { alert('Please fill all fields.'); return; }
+  let rec = attendance.find(a=>a.date===date && a.staffId===staffId);
+  if(!rec) { rec={date,staffId,checkIn:'',breakStart:'',breakEnd:'',checkOut:'',status:'Present',notes:''}; attendance.push(rec); }
+  if(action==='Check-In') { rec.checkIn=time; const s=getStaff(staffId); rec.status=timeToMin(time)>timeToMin(s.shiftStart)+15?'Late':'Present'; }
+  else if(action==='Break Start') rec.breakStart=time;
+  else if(action==='Break End') rec.breakEnd=time;
+  else if(action==='Check-Out') rec.checkOut=time;
+  closeModal('modal-checkin'); renderAdmin();
+}
+
+// ══════════════════════════════════════════════════
+//  EDIT RECORD
+// ══════════════════════════════════════════════════
+function editRecord(staffId) {
+  const rec = attendance.find(a=>a.date===todayStr && a.staffId===staffId)||{staffId,date:todayStr,checkIn:'',breakStart:'',breakEnd:'',checkOut:'',status:'Present'};
+  const s=getStaff(staffId);
+  document.getElementById('edit-modal-body').innerHTML=`
+    <p style="font-size:14px;font-weight:600;margin-bottom:16px;">${s.name} — ${todayStr}</p>
+    <div class="grid-2">
+      <div class="form-group"><label>Check-In</label><input type="time" id="e-ci" value="${rec.checkIn}"></div>
+      <div class="form-group"><label>Check-Out</label><input type="time" id="e-co" value="${rec.checkOut}"></div>
+      <div class="form-group"><label>Break Start</label><input type="time" id="e-bs" value="${rec.breakStart}"></div>
+      <div class="form-group"><label>Break End</label><input type="time" id="e-be" value="${rec.breakEnd}"></div>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select id="e-status">
+        ${['Present','Absent','Late','Week Off'].map(v=>`<option ${rec.status===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveEdit('${staffId}')">Save Changes</button>
+  `;
+  openModal('modal-edit');
+}
+function saveEdit(staffId) {
+  let rec=attendance.find(a=>a.date===todayStr && a.staffId===staffId);
+  if(!rec){rec={date:todayStr,staffId,checkIn:'',breakStart:'',breakEnd:'',checkOut:'',status:'Present',notes:''};attendance.push(rec);}
+  rec.checkIn=document.getElementById('e-ci').value;
+  rec.checkOut=document.getElementById('e-co').value;
+  rec.breakStart=document.getElementById('e-bs').value;
+  rec.breakEnd=document.getElementById('e-be').value;
+  rec.status=document.getElementById('e-status').value;
+  closeModal('modal-edit'); renderAdmin();
+}
+
+// ══════════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════════
+function setMonthFilter() {
+  const n=new Date();
+  document.getElementById('rpt-month').value=n.getMonth();
+}
+function setMonthFilter2() {
+  const n=new Date();
+  document.getElementById('view-month').value=n.getMonth();
+}
+
+function renderReports() {
+  const month=+document.getElementById('rpt-month').value;
+  const year=+document.getElementById('rpt-year').value;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const monthRecs = attendance.filter(a=>{
+    const d=new Date(a.date); return d.getMonth()===month && d.getFullYear()===year;
+  });
+
+  let totalPresent=0,totalAbsent=0,totalLate=0;
+  const summaryRows=staff.map(s=>{
+    const recs=monthRecs.filter(r=>r.staffId===s.id);
+    const present=recs.filter(r=>r.status==='Present'||r.status==='Late').length;
+    const absent=recs.filter(r=>r.status==='Absent').length;
+    const late=recs.filter(r=>r.status==='Late').length;
+    const hrs=recs.reduce((acc,r)=>acc+workingHrsMin(r),0);
+    const avgHrs=present?Math.floor(hrs/present/60)+'h '+Math.floor(hrs/present)%60+'m':'—';
+    totalPresent+=present; totalAbsent+=absent; totalLate+=late;
+    const pct=Math.round(present/Math.max(daysInMonth,1)*100);
+    return {s,present,absent,late,avgHrs,pct};
+  });
+
+  document.getElementById('rpt-stats').innerHTML=`
+    <div class="stat-card green"><div class="stat-label">Total Present Days</div><div class="stat-value">${totalPresent}</div><div class="stat-sub">across all staff</div></div>
+    <div class="stat-card red"><div class="stat-label">Total Absent</div><div class="stat-value">${totalAbsent}</div></div>
+    <div class="stat-card amber"><div class="stat-label">Late Arrivals</div><div class="stat-value">${totalLate}</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Attendance</div><div class="stat-value">${Math.round(totalPresent/(staff.length*daysInMonth)*100)}%</div></div>
+  `;
+
+  document.getElementById('perf-chart').innerHTML=summaryRows.map(({s,pct})=>`
+    <div class="perf-row">
+      <div class="perf-name">${s.name.split(' ')[0]}</div>
+      <div class="perf-bar-wrap">
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="perf-pct">${pct}%</div>
+    </div>
+  `).join('');
+
+  document.getElementById('rpt-summary-tbody').innerHTML=summaryRows.map(({s,present,absent,late,avgHrs})=>`
+    <tr><td><strong>${s.name}</strong></td><td>${present}</td><td>${absent}</td>
+    <td>${late?`<span style="color:var(--caramel)">${late}</span>`:'0'}</td><td class="time-val">${avgHrs}</td></tr>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  VIEWER
+// ══════════════════════════════════════════════════
+function renderViewer() {
+  populateStaffSelects();
+  const month=+document.getElementById('view-month').value;
+  const year=new Date().getFullYear();
+  const filterStaff=document.getElementById('view-staff').value;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const filtered=filterStaff==='all'?staff:staff.filter(s=>s.id===filterStaff);
+
+  document.getElementById('viewer-cards').innerHTML=filtered.map(s=>{
+    const recs=attendance.filter(a=>{
+      const d=new Date(a.date);return d.getMonth()===month&&d.getFullYear()===year&&a.staffId===s.id;
+    });
+    const present=recs.filter(r=>r.status==='Present'||r.status==='Late').length;
+    const absent=recs.filter(r=>r.status==='Absent').length;
+    const weekoff=recs.filter(r=>r.status==='Week Off').length;
+    const hrs=recs.reduce((a,r)=>a+workingHrsMin(r),0);
+    const avgH=present?Math.floor(hrs/present/60)+'h '+Math.floor(hrs/present)%60+'m':'—';
+    const pct=Math.round(present/Math.max(daysInMonth-weekoff,1)*100);
+
+    // Calendar
+    const firstDay=new Date(year,month,1).getDay();
+    const days=['S','M','T','W','T','F','S'];
+    let calHtml=days.map(d=>`<div class="cal-day-label">${d}</div>`).join('');
+    for(let i=0;i<firstDay;i++) calHtml+=`<div class="cal-empty"></div>`;
+    for(let d=1;d<=daysInMonth;d++){
+      const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const rec=recs.find(r=>r.date===ds);
+      const isToday=ds===todayStr;
+      let cls='cal-empty';
+      if(rec){
+        if(rec.status==='Present') cls='cal-present';
+        else if(rec.status==='Late') cls='cal-late';
+        else if(rec.status==='Absent') cls='cal-absent';
+        else if(rec.status==='Week Off') cls='cal-weekoff';
+      }
+      calHtml+=`<div class="cal-day ${cls}${isToday?' cal-today':''}" title="${ds}">${d}</div>`;
+    }
+
+    return `<div class="card">
+      <div class="card-header" style="flex-direction:column;align-items:flex-start;gap:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+          <div>
+            <div class="card-title">${s.name}</div>
+            <div style="font-size:12px;color:var(--mocha);">${s.role} · ${s.id}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--caramel);">${pct}%</div>
+            <div style="font-size:11px;color:var(--mocha);">Attendance</div>
+          </div>
+        </div>
+        <div style="width:100%;"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:16px;margin-bottom:16px;">
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(74,124,89,0.08);border-radius:10px;">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--accent-green);">${present}</div>
+            <div style="font-size:11px;color:var(--mocha);">Present</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(184,84,80,0.08);border-radius:10px;">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--accent-red);">${absent}</div>
+            <div style="font-size:11px;color:var(--mocha);">Absent</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(212,160,23,0.08);border-radius:10px;">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--accent-amber);">${weekoff}</div>
+            <div style="font-size:11px;color:var(--mocha);">Week Off</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--mocha);margin-bottom:10px;">Avg Working Hrs: <strong style="color:var(--espresso);">${avgH}</strong></div>
+        <div class="cal-grid">${calHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  STAFF MANAGEMENT
+// ══════════════════════════════════════════════════
+function renderStaff() {
+  document.getElementById('staff-tbody').innerHTML=staff.map((s,i)=>`
+    <tr>
+      <td><span class="time-val">${s.id}</span></td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="badge badge-break">${s.role}</span></td>
+      <td class="time-val">${s.shiftStart}</td>
+      <td class="time-val">${s.shiftEnd}</td>
+      <td>${s.weekOff}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" style="color:var(--accent-red);border-color:var(--accent-red);" onclick="removeStaff(${i})">Remove</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function addStaff() {
+  const name=document.getElementById('s-name').value.trim();
+  if(!name){alert('Please enter a name.');return;}
+  const id='BC'+String(staff.length+1).padStart(3,'0');
+  staff.push({
+    id, name,
+    role:document.getElementById('s-role').value,
+    shiftStart:document.getElementById('s-shift-start').value,
+    shiftEnd:document.getElementById('s-shift-end').value,
+    weekOff:document.getElementById('s-weekoff').value
+  });
+  document.getElementById('s-name').value='';
+  closeModal('modal-add-staff'); renderStaff(); renderAdmin();
+}
+
+function removeStaff(idx) {
+  if(confirm(`Remove ${staff[idx].name}?`)) { staff.splice(idx,1); renderStaff(); renderAdmin(); }
+}
+
+// ══════════════════════════════════════════════════
+//  EXPORT CSV
+// ══════════════════════════════════════════════════
+function exportCSV() {
+  const headers=['Date','Staff ID','Name','Role','Check-In','Break Start','Break End','Check-Out','Status','Working Hrs'];
+  const rows=attendance.map(r=>{
+    const s=getStaff(r.staffId);
+    return [r.date,r.staffId,s.name,s.role,r.checkIn,r.breakStart,r.breakEnd,r.checkOut,r.status,calcWorkingHrs(r)];
+  });
+  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`brew-co-attendance-${todayStr}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+document.getElementById('m-ci-date').value=todayStr;
+setMonthFilter(); setMonthFilter2();
+renderAdmin();
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
