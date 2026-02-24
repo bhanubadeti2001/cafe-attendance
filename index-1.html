@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trailing Ivy Café — Staff Attendance</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
   --cream: #F5EFE4; --warm-white: #FAF7F2; --espresso: #2C1810;
@@ -343,7 +343,7 @@ input:focus, select:focus { border-color: var(--ivy); box-shadow: 0 0 0 3px rgba
 <script>
 const SUPABASE_URL = 'https://mmhjmgdyoejnktumhflz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_wEoorrH4w8NHPZexsJvYWg_OZCrpi7r';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let staffList = [];
 let attendanceList = [];
