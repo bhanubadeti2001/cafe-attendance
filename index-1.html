@@ -6,7 +6,7 @@
 <title>Trailing Ivy Café</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- Supabase CDN - reliable UMD build -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{--cream:#F5EFE4;--warm-white:#FAF7F2;--espresso:#2C1810;--dark-roast:#1A0F0A;--caramel:#C8854A;--latte:#D4A574;--mocha:#6B3F2A;--steam:#E8DDD0;--foam:#F0EAE0;--ivy:#3D6B4A;--ivy-light:#5A8F69;--red:#B85450;--amber:#D4A017;--shadow:rgba(44,24,16,0.12)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -286,4 +286,522 @@ tbody tr:hover{background:var(--foam)}
   <div class="sg" id="rsStats"></div>
   <div class="g2">
     <div class="card"><div class="ch"><div class="ct">Attendance %</div></div><div class="cb" id="rchart"></div></div>
-    <div class="card"><div class="ch"><div class="ct">Monthly Summary</
+    <div class="card"><div class="ch"><div class="ct">Monthly Summary</div></div><div class="cb"><div class="tw"><table><thead><tr><th>Name</th><th>Present</th><th>Absent</th><th>Late</th><th>Avg Hrs</th></tr></thead><tbody id="rsum"></tbody></table></div></div></div>
+  </div>
+</div>
+
+<!-- STAFF -->
+<div class="panel" id="panel-staff">
+  <div class="ph"><div><div class="pt">Staff Directory</div><div class="ps">Manage your team</div></div><button class="btn btn-p" onclick="openM('m-staff')">+ Add Staff</button></div>
+  <div class="card"><div class="cb"><div class="tw"><table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Shift Start</th><th>Shift End</th><th>Week Off</th><th>Action</th></tr></thead><tbody id="stbody"></tbody></table></div></div></div>
+</div>
+
+<!-- VIEWER -->
+<div class="panel" id="panel-viewer">
+  <div class="ph"><div><div class="pt">Staff Overview</div><div class="ps">Viewer Dashboard — Read Only</div></div><div class="dbadge" id="vdate">—</div></div>
+  <div class="vob">👁️ <strong style="margin-right:3px">View Only</strong> — No changes allowed</div>
+  <div class="ann"><div class="ann-icon">📢</div><div class="ann-text"><strong>Notice</strong>Welcome to Trailing Ivy Café Staff Overview! 🍃</div></div>
+  <div class="sg" id="vstats"></div>
+  <div class="fr">
+    <select id="vm" onchange="renderViewer()"><option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option></select>
+    <select id="vs" onchange="renderViewer()"><option value="all">All Staff</option></select>
+  </div>
+  <div id="vcards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
+</div>
+
+</main>
+</div>
+
+<!-- MODAL: LOG -->
+<div class="mo" id="m-log">
+  <div class="modal">
+    <div class="mh"><div class="mt">Log Attendance</div><button class="mc" onclick="closeM('m-log')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="lbl2">Select Staff</label><select class="inp2" id="mls"><option value="">— Choose —</option></select></div>
+      <div class="g2">
+        <div class="fg"><label class="lbl2">Date</label><input class="inp2" type="date" id="mld"></div>
+        <div class="fg"><label class="lbl2">Action</label><select class="inp2" id="mla"><option>Check-In</option><option>Break Start</option><option>Break End</option><option>Check-Out</option></select></div>
+      </div>
+      <div class="fg"><label class="lbl2">Time (blank = now)</label><input class="inp2" type="time" id="mlt"></div>
+      <button class="btn btn-ivy" style="width:100%;padding:11px" onclick="submitLog()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD STAFF -->
+<div class="mo" id="m-staff">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add New Staff</div><button class="mc" onclick="closeM('m-staff')">✕</button></div>
+    <div class="mb">
+      <div class="g2">
+        <div class="fg"><label class="lbl2">Full Name</label><input class="inp2" type="text" id="sn" placeholder="Staff name"></div>
+        <div class="fg"><label class="lbl2">Role</label><select class="inp2" id="sr"><option>Barista</option><option>Cashier</option><option>Supervisor</option><option>Chef</option><option>Cafe Helper</option><option>Cleaner</option><option>Manager</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="lbl2">Shift Start</label><input class="inp2" type="time" id="ss" value="09:00"></div>
+        <div class="fg"><label class="lbl2">Shift End</label><input class="inp2" type="time" id="se" value="18:00"></div>
+      </div>
+      <div class="fg"><label class="lbl2">Week Off</label><select class="inp2" id="sw"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option selected>Saturday</option><option>Sunday</option></select></div>
+      <button class="btn btn-ivy" style="width:100%;padding:11px" onclick="addStaff()">Add Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT -->
+<div class="mo" id="m-edit">
+  <div class="modal">
+    <div class="mh"><div class="mt">Edit Record</div><button class="mc" onclick="closeM('m-edit')">✕</button></div>
+    <div class="mb" id="editbody"></div>
+  </div>
+</div>
+
+<script>
+// ══ SUPABASE INIT ══
+const SB_URL = 'https://mmhjmgdyoejnktumhflz.supabase.co';
+const SB_KEY = 'sb_publishable_wEoorrH4w8NHPZexsJvYWg_OZCrpi7r';
+
+let SB;
+function initSB() {
+  try {
+    if (window.supabase) {
+      SB = window.supabase.createClient(SB_URL, SB_KEY);
+      console.log('✅ Supabase connected!');
+    } else {
+      console.error('❌ Supabase library not loaded');
+      alert('Database connection failed. Please check your internet and refresh.');
+    }
+  } catch(e) {
+    console.error('Supabase init error:', e);
+    alert('Error: ' + e.message);
+  }
+}
+initSB();
+
+// ══ STATE ══
+let staffList = [];
+let attList = [];
+let role = null;
+let selRole = 'admin';
+const today = new Date();
+const todayStr = fmtDate(today);
+
+// ══ HELPERS ══
+function fmtDate(d){return d.toISOString().split('T')[0];}
+function t2m(t){if(!t)return 0;const[h,m]=t.split(':');return +h*60+ +m;}
+function nowT(){const n=new Date();return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
+function wkHrs(r){
+  if(!r||!r.check_in||!r.check_out)return '—';
+  let t=t2m(r.check_out)-t2m(r.check_in);
+  if(r.break_start&&r.break_end)t-=t2m(r.break_end)-t2m(r.break_start);
+  if(t<=0)return '—';
+  return `${Math.floor(t/60)}h ${String(t%60).padStart(2,'0')}m`;
+}
+function wkMin(r){
+  if(!r||!r.check_in||!r.check_out)return 0;
+  let t=t2m(r.check_out)-t2m(r.check_in);
+  if(r.break_start&&r.break_end)t-=t2m(r.break_end)-t2m(r.break_start);
+  return Math.max(0,t);
+}
+function getS(id){return staffList.find(s=>s.id===id)||{};}
+function getTR(id){return attList.find(a=>a.date===todayStr&&a.staff_id===id);}
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function load(txt='Saving...'){document.getElementById('load-txt').textContent=txt;document.getElementById('loader').classList.add('on');}
+function unload(){document.getElementById('loader').classList.remove('on');}
+function sbadge(s){
+  const cls={Present:'bp',Absent:'ba','Week Off':'bw',Late:'bl'};
+  const dot={Present:'🟢',Absent:'🔴','Week Off':'🟡',Late:'🟠'};
+  return `<span class="badge ${cls[s]||'br'}">${dot[s]||'⚪'} ${s||'—'}</span>`;
+}
+
+// ══ CLOCK ══
+function tick(){
+  const n=new Date();
+  const ts=n.toLocaleTimeString('en-IN',{hour12:false});
+  const ds=n.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const sd=n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const ce=document.getElementById('clk');if(ce)ce.textContent=ts;
+  const de=document.getElementById('clkd');if(de)de.textContent=ds;
+  ['hdate','cidate','vdate'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=sd;});
+}
+setInterval(tick,1000);tick();
+
+// ══ AUTH ══
+const CREDS={admin:{pass:'admin123',role:'admin'},viewer:{pass:'view123',role:'user'}};
+
+function selRole(r){
+  selRole=r;
+  document.getElementById('tab-admin').classList.toggle('active',r==='admin');
+  document.getElementById('tab-user').classList.toggle('active',r==='user');
+  document.getElementById('lerr').style.display='none';
+}
+// fix naming conflict
+window.selRole = selRole;
+
+async function doLogin(){
+  const u=document.getElementById('lu').value.trim().toLowerCase();
+  const p=document.getElementById('lp').value;
+  const err=document.getElementById('lerr');
+  const cred=CREDS[u];
+  if(!cred||cred.pass!==p||cred.role!==selRole){err.style.display='block';return;}
+  err.style.display='none';
+  role=cred.role;
+  load('Loading data...');
+  await fetchAll();
+  unload();
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  setupApp();
+}
+
+function doLogout(){
+  role=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+}
+
+// ══ DATA ══
+async function fetchAll(){
+  try {
+    const [sr,ar]=await Promise.all([SB.from('staff').select('*'),SB.from('attendance').select('*')]);
+    if(sr.data)staffList=sr.data;
+    if(ar.data)attList=ar.data;
+    if(sr.error)console.error('Staff error:',sr.error);
+    if(ar.error)console.error('Att error:',ar.error);
+  } catch(e){ console.error('Fetch error:',e); }
+}
+
+async function fetchAtt(){
+  try {
+    const {data,error}=await SB.from('attendance').select('*');
+    if(data)attList=data;
+    if(error)console.error(error);
+  } catch(e){ console.error(e); }
+}
+
+// ══ SETUP ══
+function setupApp(){
+  const isAdmin=role==='admin';
+  document.getElementById('rbadge').textContent=isAdmin?'ADMIN':'VIEWER';
+  document.getElementById('navav').textContent=isAdmin?'A':'V';
+  document.getElementById('navname').textContent=isAdmin?'Admin':'Viewer';
+  const nt=document.getElementById('ntabs');
+  if(isAdmin){
+    nt.innerHTML=`
+      <button class="nav-tab active" onclick="showP('admin',this)">Dashboard</button>
+      <button class="nav-tab" onclick="showP('checkin',this)">Check-In</button>
+      <button class="nav-tab" onclick="showP('reports',this)">Reports</button>
+      <button class="nav-tab" onclick="showP('staff',this)">Staff</button>`;
+    showP('admin',nt.firstElementChild);
+  }else{
+    nt.innerHTML=`<button class="nav-tab active" onclick="showP('viewer',this)">Overview</button>`;
+    showP('viewer',nt.firstElementChild);
+  }
+  fillSelects();
+  setMF();
+  document.getElementById('mld').value=todayStr;
+}
+
+function showP(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const p=document.getElementById('panel-'+name);
+  if(p)p.classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='admin')renderAdmin();
+  if(name==='checkin')renderCI();
+  if(name==='reports')renderRpt();
+  if(name==='staff')renderStaff();
+  if(name==='viewer')renderViewer();
+}
+
+function fillSelects(){
+  const opts=staffList.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  ['mls','cisel'].forEach(id=>{const el=document.getElementById(id);if(el){const cur=el.value;el.innerHTML='<option value="">— Select —</option>'+opts;if(cur)el.value=cur;}});
+  const vs=document.getElementById('vs');
+  if(vs)vs.innerHTML='<option value="all">All Staff</option>'+staffList.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+function setMF(){
+  const m=new Date().getMonth();
+  ['rm','vm'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=m;});
+}
+
+// ══ ADMIN ══
+function renderAdmin(){
+  const recs=attList.filter(a=>a.date===todayStr);
+  let p=0,ab=0,wo=0,lt=0,th=0,hc=0;
+  staffList.forEach(s=>{
+    const r=recs.find(x=>x.staff_id===s.id);
+    if(!r||r.status==='Absent')ab++;
+    else if(r.status==='Week Off')wo++;
+    else{p++;if(r.status==='Late')lt++;}
+    const w=r?wkMin(r):0;
+    if(w>0){th+=w;hc++;}
+  });
+  document.getElementById('s1').textContent=p;
+  document.getElementById('s2').textContent=ab;
+  document.getElementById('s3').textContent=wo;
+  document.getElementById('s4').textContent=lt;
+  document.getElementById('s1t').textContent=staffList.length;
+  document.getElementById('s5').textContent=hc?Math.floor(th/hc/60)+'h '+Math.floor(th/hc)%60+'m':'—';
+
+  document.getElementById('tlog').innerHTML=recs.filter(r=>r.check_in).map(r=>{
+    const s=getS(r.staff_id);
+    return `<div class="le"><div class="ld ${r.status==='Late'?'lda':'ldg'}"></div><div class="li"><div class="ln">${s.name||'Unknown'}</div><div class="ldt">${s.role||''} · ${r.status}</div></div><div class="lt">${r.check_in}</div></div>`;
+  }).join('')||'<div style="color:var(--mocha);font-size:13px">No check-ins yet.</div>';
+
+  const ob=recs.filter(r=>r.break_start&&!r.break_end&&!r.check_out);
+  document.getElementById('blog').innerHTML=ob.length?ob.map(r=>{
+    const s=getS(r.staff_id);
+    return `<div class="le"><div class="ld lda"></div><div class="li"><div class="ln">${s.name||'Unknown'}</div><div class="ldt">Since ${r.break_start}</div></div><div class="lt">⏸</div></div>`;
+  }).join(''):'<div style="color:var(--mocha);font-size:13px">No one on break.</div>';
+
+  document.getElementById('atbody').innerHTML=staffList.map(s=>{
+    const r=recs.find(x=>x.staff_id===s.id)||{};
+    return `<tr><td class="tv">${s.id}</td><td><strong>${s.name}</strong></td><td style="color:var(--mocha)">${s.role}</td><td class="tv">${r.check_in||'—'}</td><td class="tv">${r.break_start?(r.break_end?r.break_start+' – '+r.break_end:r.break_start+' ⏸'):'-'}</td><td class="tv">${r.check_out||'—'}</td><td>${sbadge(r.status||'Absent')}</td><td><span class="wh">${wkHrs(r)}</span></td><td><button class="btn btn-o btn-sm" onclick="editRec('${s.id}')">Edit</button></td></tr>`;
+  }).join('');
+  fillSelects();
+}
+
+// ══ CHECK-IN ══
+function renderCI(){
+  fillSelects();
+  document.getElementById('scards').innerHTML=staffList.map(s=>{
+    const r=getTR(s.id)||{};
+    let txt='Not Checked In',bg='rgba(107,63,42,.06)',tc='var(--mocha)';
+    if(r.check_in&&!r.check_out){txt='Working';bg='rgba(61,107,74,.12)';tc='var(--ivy)';}
+    if(r.break_start&&!r.break_end){txt='On Break';bg='rgba(212,160,23,.1)';tc='var(--amber)';}
+    if(r.check_out){txt='Checked Out';bg='rgba(107,63,42,.06)';tc='var(--mocha)';}
+    if(r.status==='Week Off'){txt='Week Off';bg='rgba(212,160,23,.08)';tc='var(--amber)';}
+    return `<div style="background:${bg};border:1px solid var(--steam);border-radius:11px;padding:13px"><div style="font-size:13px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--mocha);margin-bottom:5px">${s.role}</div><div style="font-size:12px;font-weight:600;color:${tc}">${txt}</div>${r.check_in?`<div class="tv" style="font-size:11px;color:var(--mocha);margin-top:2px">In: ${r.check_in}${r.check_out?' | Out: '+r.check_out:''}</div>`:''}</div>`;
+  }).join('');
+}
+
+async function logA(action){
+  const sid=document.getElementById('cisel').value;
+  if(!sid){alert('Please select a staff member first.');return;}
+  const now=nowT();
+  const s=getS(sid);
+  let rec=attList.find(a=>a.date===todayStr&&a.staff_id===sid);
+  load('Saving...');
+  try {
+    if(!rec){
+      const{data,error}=await SB.from('attendance').insert([{date:todayStr,staff_id:sid,check_in:'',break_start:'',break_end:'',check_out:'',status:'Present',notes:''}]).select();
+      if(error){console.error(error);unload();alert('Error: '+error.message);return;}
+      if(data){rec=data[0];attList.push(rec);}
+    }
+    const upd={};
+    if(action==='ci'){
+      if(rec.check_in){unload();alert('Already checked in at '+rec.check_in);return;}
+      upd.check_in=now;upd.status=t2m(now)>t2m(s.shift_start)+15?'Late':'Present';
+    }else if(action==='bs'){
+      if(!rec.check_in){unload();alert('Not checked in yet.');return;}
+      upd.break_start=now;upd.break_end='';
+    }else if(action==='be'){
+      if(!rec.break_start){unload();alert('No active break.');return;}
+      upd.break_end=now;
+    }else if(action==='co'){
+      if(!rec.check_in){unload();alert('Not checked in yet.');return;}
+      upd.check_out=now;
+    }
+    const{error}=await SB.from('attendance').update(upd).eq('date',todayStr).eq('staff_id',sid);
+    if(error){console.error(error);unload();alert('Save error: '+error.message);return;}
+    await fetchAtt();
+  } catch(e){ console.error(e);alert('Error: '+e.message); }
+  unload();renderCI();renderAdmin();
+}
+
+async function submitLog(){
+  const sid=document.getElementById('mls').value;
+  const date=document.getElementById('mld').value;
+  const action=document.getElementById('mla').value;
+  const time=document.getElementById('mlt').value||nowT();
+  if(!sid||!date){alert('Please fill all fields.');return;}
+  load('Saving...');
+  try {
+    let rec=attList.find(a=>a.date===date&&a.staff_id===sid);
+    if(!rec){
+      const{data,error}=await SB.from('attendance').insert([{date,staff_id:sid,check_in:'',break_start:'',break_end:'',check_out:'',status:'Present',notes:''}]).select();
+      if(error){unload();alert('Error: '+error.message);return;}
+      if(data){rec=data[0];attList.push(rec);}
+    }
+    const upd={};const s=getS(sid);
+    if(action==='Check-In'){upd.check_in=time;upd.status=t2m(time)>t2m(s.shift_start)+15?'Late':'Present';}
+    else if(action==='Break Start')upd.break_start=time;
+    else if(action==='Break End')upd.break_end=time;
+    else if(action==='Check-Out')upd.check_out=time;
+    const{error}=await SB.from('attendance').update(upd).eq('date',date).eq('staff_id',sid);
+    if(error){unload();alert('Error: '+error.message);return;}
+    await fetchAtt();
+  } catch(e){ console.error(e);alert('Error: '+e.message); }
+  unload();closeM('m-log');renderAdmin();
+}
+
+function editRec(sid){
+  const rec=attList.find(a=>a.date===todayStr&&a.staff_id===sid)||{check_in:'',check_out:'',break_start:'',break_end:'',status:'Present'};
+  const s=getS(sid);
+  document.getElementById('editbody').innerHTML=`
+    <p style="font-size:14px;font-weight:600;margin-bottom:14px">${s.name} — ${todayStr}</p>
+    <div class="g2">
+      <div class="fg"><label class="lbl2">Check-In</label><input class="inp2" type="time" id="eci" value="${rec.check_in||''}"></div>
+      <div class="fg"><label class="lbl2">Check-Out</label><input class="inp2" type="time" id="eco" value="${rec.check_out||''}"></div>
+      <div class="fg"><label class="lbl2">Break Start</label><input class="inp2" type="time" id="ebs" value="${rec.break_start||''}"></div>
+      <div class="fg"><label class="lbl2">Break End</label><input class="inp2" type="time" id="ebe" value="${rec.break_end||''}"></div>
+    </div>
+    <div class="fg"><label class="lbl2">Status</label><select class="inp2" id="est">${['Present','Absent','Late','Week Off'].map(v=>`<option ${rec.status===v?'selected':''}>${v}</option>`).join('')}</select></div>
+    <button class="btn btn-ivy" style="width:100%;padding:11px" onclick="saveEdit('${sid}')">Save Changes</button>`;
+  openM('m-edit');
+}
+
+async function saveEdit(sid){
+  const upd={check_in:document.getElementById('eci').value,check_out:document.getElementById('eco').value,break_start:document.getElementById('ebs').value,break_end:document.getElementById('ebe').value,status:document.getElementById('est').value};
+  load('Saving...');
+  try {
+    const ex=attList.find(a=>a.date===todayStr&&a.staff_id===sid);
+    if(ex){await SB.from('attendance').update(upd).eq('date',todayStr).eq('staff_id',sid);}
+    else{await SB.from('attendance').insert([{date:todayStr,staff_id:sid,...upd,notes:''}]);}
+    await fetchAtt();
+  } catch(e){ console.error(e); }
+  unload();closeM('m-edit');renderAdmin();
+}
+
+// ══ REPORTS ══
+function renderRpt(){
+  const mo=+document.getElementById('rm').value;
+  const yr=+document.getElementById('ry').value;
+  const dim=new Date(yr,mo+1,0).getDate();
+  const recs=attList.filter(a=>{const d=new Date(a.date);return d.getMonth()===mo&&d.getFullYear()===yr;});
+  let tp=0,ta=0,tl=0;
+  const rows=staffList.map(s=>{
+    const sr=recs.filter(r=>r.staff_id===s.id);
+    const pres=sr.filter(r=>r.status==='Present'||r.status==='Late').length;
+    const abs=sr.filter(r=>r.status==='Absent').length;
+    const late=sr.filter(r=>r.status==='Late').length;
+    const hrs=sr.reduce((a,r)=>a+wkMin(r),0);
+    const avg=pres?Math.floor(hrs/pres/60)+'h '+Math.floor(hrs/pres)%60+'m':'—';
+    tp+=pres;ta+=abs;tl+=late;
+    return{s,pres,abs,late,avg,pct:Math.round(pres/Math.max(dim,1)*100)};
+  });
+  document.getElementById('rsStats').innerHTML=`
+    <div class="sc g"><div class="sl">Total Present</div><div class="sv">${tp}</div></div>
+    <div class="sc r"><div class="sl">Total Absent</div><div class="sv">${ta}</div></div>
+    <div class="sc a"><div class="sl">Late Arrivals</div><div class="sv">${tl}</div></div>
+    <div class="sc"><div class="sl">Avg Attendance</div><div class="sv">${Math.round(tp/(staffList.length*dim||1)*100)}%</div></div>`;
+  document.getElementById('rchart').innerHTML=rows.map(({s,pct})=>`<div class="pr"><div class="pn">${s.name.split(' ')[0]}</div><div style="flex:1"><div class="pb"><div class="pf" style="width:${pct}%"></div></div></div><div class="pp">${pct}%</div></div>`).join('');
+  document.getElementById('rsum').innerHTML=rows.map(({s,pres,abs,late,avg})=>`<tr><td><strong>${s.name}</strong></td><td>${pres}</td><td>${abs}</td><td>${late?`<span style="color:var(--caramel)">${late}</span>`:'0'}</td><td class="tv">${avg}</td></tr>`).join('');
+}
+
+// ══ VIEWER ══
+function renderViewer(){
+  fillSelects();
+  const mo=+document.getElementById('vm').value;
+  const yr=new Date().getFullYear();
+  const flt=document.getElementById('vs').value;
+  const dim=new Date(yr,mo+1,0).getDate();
+  const fl=flt==='all'?staffList:staffList.filter(s=>s.id===flt);
+  const ar=attList.filter(a=>{const d=new Date(a.date);return d.getMonth()===mo&&d.getFullYear()===yr;});
+  let tp=0,ta=0,tw=0;
+  fl.forEach(s=>{
+    const sr=ar.filter(r=>r.staff_id===s.id);
+    tp+=sr.filter(r=>r.status==='Present'||r.status==='Late').length;
+    ta+=sr.filter(r=>r.status==='Absent').length;
+    tw+=sr.filter(r=>r.status==='Week Off').length;
+  });
+  document.getElementById('vstats').innerHTML=`
+    <div class="sc g"><div class="sl">Present Days</div><div class="sv">${tp}</div></div>
+    <div class="sc r"><div class="sl">Absent Days</div><div class="sv">${ta}</div></div>
+    <div class="sc a"><div class="sl">Week Offs</div><div class="sv">${tw}</div></div>
+    <div class="sc"><div class="sl">Staff Shown</div><div class="sv">${fl.length}</div></div>`;
+  document.getElementById('vcards').innerHTML=fl.map(s=>{
+    const recs=ar.filter(r=>r.staff_id===s.id);
+    const pres=recs.filter(r=>r.status==='Present'||r.status==='Late').length;
+    const abs=recs.filter(r=>r.status==='Absent').length;
+    const wo=recs.filter(r=>r.status==='Week Off').length;
+    const hrs=recs.reduce((a,r)=>a+wkMin(r),0);
+    const avgH=pres?Math.floor(hrs/pres/60)+'h '+Math.floor(hrs/pres)%60+'m':'—';
+    const pct=Math.round(pres/Math.max(dim-wo,1)*100);
+    const fd=new Date(yr,mo,1).getDay();
+    const days=['S','M','T','W','T','F','S'];
+    let cal=days.map(d=>`<div class="cdl">${d}</div>`).join('');
+    for(let i=0;i<fd;i++)cal+=`<div class="cde"></div>`;
+    for(let d=1;d<=dim;d++){
+      const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const r=recs.find(x=>x.date===ds);
+      const it=ds===todayStr;
+      let cls='cde';
+      if(r){if(r.status==='Present')cls='cdp';else if(r.status==='Late')cls='cdl2';else if(r.status==='Absent')cls='cda';else if(r.status==='Week Off')cls='cdw';}
+      cal+=`<div class="cd ${cls}${it?' cdt':''}">${d}</div>`;
+    }
+    return `<div class="card">
+      <div class="ch" style="flex-direction:column;align-items:flex-start;gap:5px">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div><div class="ct">${s.name}</div><div style="font-size:12px;color:var(--mocha)">${s.role} · ${s.id}</div></div>
+          <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--ivy);font-weight:600">${pct}%</div><div style="font-size:11px;color:var(--mocha)">Attendance</div></div>
+        </div>
+        <div style="width:100%"><div class="pb"><div class="pf" style="width:${pct}%"></div></div></div>
+      </div>
+      <div class="cb">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1;text-align:center;padding:9px;background:rgba(61,107,74,.08);border-radius:9px"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ivy)">${pres}</div><div style="font-size:11px;color:var(--mocha)">Present</div></div>
+          <div style="flex:1;text-align:center;padding:9px;background:rgba(184,84,80,.08);border-radius:9px"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--red)">${abs}</div><div style="font-size:11px;color:var(--mocha)">Absent</div></div>
+          <div style="flex:1;text-align:center;padding:9px;background:rgba(212,160,23,.08);border-radius:9px"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--amber)">${wo}</div><div style="font-size:11px;color:var(--mocha)">Off</div></div>
+        </div>
+        <div style="font-size:12px;color:var(--mocha);margin-bottom:8px">Avg Hrs: <strong>${avgH}</strong></div>
+        <div class="cg">${cal}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ STAFF ══
+function renderStaff(){
+  document.getElementById('stbody').innerHTML=staffList.map(s=>`
+    <tr><td class="tv">${s.id}</td><td><strong>${s.name}</strong></td><td><span class="badge br">${s.role}</span></td><td class="tv">${s.shift_start}</td><td class="tv">${s.shift_end}</td><td>${s.week_off}</td>
+    <td><button class="btn btn-o btn-sm" style="color:var(--red);border-color:rgba(184,84,80,.3)" onclick="removeStaff('${s.id}')">Remove</button></td></tr>`).join('');
+}
+
+async function addStaff(){
+  const name=document.getElementById('sn').value.trim();
+  if(!name){alert('Please enter a name.');return;}
+  const id='TI'+String(staffList.length+1).padStart(3,'0');
+  const ns={id,name,role:document.getElementById('sr').value,shift_start:document.getElementById('ss').value,shift_end:document.getElementById('se').value,week_off:document.getElementById('sw').value};
+  load('Adding...');
+  try {
+    const{error}=await SB.from('staff').insert([ns]);
+    if(error){unload();alert('Error: '+error.message);return;}
+    staffList.push(ns);
+  } catch(e){ console.error(e); }
+  document.getElementById('sn').value='';
+  unload();closeM('m-staff');renderStaff();renderAdmin();fillSelects();
+}
+
+async function removeStaff(id){
+  if(!confirm('Remove this staff member?'))return;
+  load('Removing...');
+  try {
+    await SB.from('staff').delete().eq('id',id);
+    staffList=staffList.filter(s=>s.id!==id);
+  } catch(e){ console.error(e); }
+  unload();renderStaff();renderAdmin();
+}
+
+// ══ EXPORT ══
+function exportCSV(){
+  const h=['Date','Staff ID','Name','Role','Check-In','Break Start','Break End','Check-Out','Status','Working Hrs'];
+  const rows=attList.map(r=>{const s=getS(r.staff_id);return[r.date,r.staff_id,s.name,s.role,r.check_in,r.break_start,r.break_end,r.check_out,r.status,wkHrs(r)];});
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`trailing-ivy-${todayStr}.csv`;a.click();
+}
+
+// ══ MODAL CLOSE ON BG ══
+document.querySelectorAll('.mo').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+});
+</script>
+</body>
+</html>
